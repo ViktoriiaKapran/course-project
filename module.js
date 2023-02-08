@@ -539,7 +539,7 @@ function drawTotalAmount(parent) {
   let totalAmountEl = document.createElement('div');
   parent.append(totalAmountEl);
   totalAmountEl.classList.add('price');
-  totalAmountEl.classList.add('total-amount');
+  totalAmountEl.classList.add('right-aligment');
   return totalAmountEl;
 }
 
@@ -557,11 +557,17 @@ const drawOrderHistory = () => {
   if (status === 'FULFILLED') {
     main.innerHTML = '';
     drawTitle('My orders');
-    payload = payload.filter(order => order.orderGoods?.every(item => item)).reverse();
+    payload.sort((a, b) => b.createdAt - a.createdAt);
     payload.forEach(order => {
       let finalSum = 0;
-      const { orderGoods, _id, total } = order;
-      if (orderGoods.length > 0) {
+      const { orderGoods, _id, total, createdAt } = order;
+      let orderCreatedAt = new Date(+createdAt);
+      let year = orderCreatedAt.getFullYear();
+      let month = orderCreatedAt.getMonth() < 9 ? '0' + (orderCreatedAt.getMonth() + 1) : orderCreatedAt.getMonth() + 1;
+      let day = orderCreatedAt.getDate() < 9 ? '0' + (orderCreatedAt.getMonth() + 1) : orderCreatedAt.getMonth() + 1;
+      let hours = orderCreatedAt.getHours() < 10 ? '0' + orderCreatedAt.getHours() : orderCreatedAt.getHours();
+      let minutes = orderCreatedAt.getMinutes() < 10 ? '0' + orderCreatedAt.getMinutes() : orderCreatedAt.getMinutes();
+      if (orderGoods?.length > 0) {
         let orderContainer = drawGoodsOrderContainer(main, `Order: ${_id}`);
         for (orderGood of orderGoods) {
           if (orderGood?.good?.name && orderGood?.count && orderGood?.price) {
@@ -583,6 +589,11 @@ const drawOrderHistory = () => {
         } else {
           totalAmountEl.innerText += `Total amount: ${finalSum} UAH`;
         }
+        let orderCreatedAtEl = document.createElement('div');
+        orderContainer.append(orderCreatedAtEl);
+        orderCreatedAtEl.style.fontSize = '14px';
+        orderCreatedAtEl.classList.add('right-aligment');
+        orderCreatedAtEl.innerText = `Order created at: ${hours}:${minutes} ${day}.${month}.${year}`;
       }
     });
   }
@@ -772,7 +783,7 @@ const gqlCreateUser = (login, password) => {
 const gqlGetOwnerOrders = () => {
   const ordersQuery = `query orders($q: String) {
     OrderFind(query: $q) {
-      _id, total, owner{
+      _id, total, createdAt, owner{
         _id, login
       }, orderGoods{
         price, count, good{
